@@ -1,42 +1,179 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+#root{
+  margin: 0;
+  padding: 0;
+  width: 100dvw;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  place-items: center;
+  min-width: 650px;
+  min-height: 90dvh;
+  justify-content: center;
+}
+
+.main-content{
+  width: 100%;
+  min-width: 900px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 50px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.card{
+  border: 3px solid #4e9eff;
+  background-color: #2a2a40;
+  color: #ffffff;
+  border-radius: 20px;
+  padding: 0;
+  margin: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50rem;
+  height: 95dvh;
+  min-width: 450px;
+  width: 80dvw;
+  max-width: 700px;
+}
+
+.card > h2{
+  margin:0;
+  padding: 20px;
+}
+
+#preview{
+  background-color: #f4f4f4;
+  color: #212121;
+  border-radius: 8px;
+  width: 60vw;
+  min-width: 600px;
+  max-width: 900px;
+  padding: 0;
+  height: 95dvh;
+  justify-content: flex-start;
+}
+
+.control-btms{
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  margin: 20px;
+}
+
+.control-btms > button{
+  .control-btms > button{
+    font-size: 1.4rem;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 0.8rem 1.6rem;
+  }
+  font-size: 1.4rem;
+}
+
+
+.start-page{
+  font-size: 1.4rem;
+  font-weight: bold;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.start-page > h1{
+  font-size: 4rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+
+.personal-data{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: calc(100% - 30px);
+  padding: 10px 15px;
+  height: 120px;
+  border-radius: 8px;
+  background-color: #272774;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.personal-data > h3{
+  font-size: 1.9rem;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+  align-self: center;
+}
+
+.personal-data > div{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.personal-data > div > div{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+
+.icon{
+  width: 20px;
+  height: 20px;
+}
+
+.card-part {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Left column for dates, right column for other parts */
+  grid-template-rows: auto auto; /* Rows for the heading and content */
+  gap: 20px; /* Space between grid items */
+  padding: 20px;
+  align-items: start; /* Align items to the start of their grid cells */
+}
+
+.title{
+  background-color: rgb(124, 185, 255);
+  width: 100%;
+}
+
+.card-part h2 {
+  grid-column: span 2; /* Make the heading span across both columns */
+  text-align: center; /* Center the heading text */
+}
+
+.card-part .dates {
+  grid-column: 1; /* Place dates in the left column */
+  grid-row: 2; /* Place dates in the second row */
+  text-wrap: normal;
+}
+
+.card-part .details {
+  grid-column: 2; /* Place other parts in the right column */
+  grid-row: 2; /* Place other parts in the second row */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.card-part .details > p {
+  margin: 0;
+  padding: 0;
+}
+
+
+@media (max-width: 1200px) {
+  .main-content {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
