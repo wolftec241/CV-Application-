@@ -1,4 +1,5 @@
-import { HtmlHTMLAttributes, useState } from 'react';
+import { HtmlHTMLAttributes, useState, useEffect} from 'react';
+import React from 'react';
 import { JSX } from 'react';
 import {format} from 'date-fns'
 import './App.css'; 
@@ -24,12 +25,14 @@ function MainContent() {
     address: '',
   });
 
-  const [educationData, setEducationData] = useState<EducationData>({
-    institution: "University of Example",
-    degree: "Bachelor of Science in Computer Science",
-    startDate: new Date(), // September 2015
-    endDate: new Date(), // June 2019
-  });
+  const [educationData, setEducationData] = useState<EducationData[]>([
+    {
+      institution: "University of Example",
+      degree: "Bachelor of Science in Computer Science",
+      startDate: new Date(),
+      endDate: new Date(),
+    },
+  ]);
 
   const [workExperience, setWorkExperience] = useState<WorkExperienceData>({
     position: '',
@@ -42,7 +45,7 @@ function MainContent() {
 
   const pageList = [
     <PersonalSection PersonalData={PersonalData} setPersonalData={setPersonalData} />,
-    <EducationSection education={educationData} setEducation={setEducationData}/>,
+    <EducationSection educations={educationData} setEducations={setEducationData}/>,
     <WorkExperienceSection workExperience={workExperience} setWorkExperience={setWorkExperience}/>
   ];
 
@@ -95,18 +98,16 @@ function MainContent() {
         <div className="card-part" id="education">
           <h2 className='title'>Education Preview</h2>
           <div className="dates">
-            <p>
-            <p style={{fontWeight:"bold", fontSize:'1.1rem'}}>{format(educationData.startDate, 'MMM yyyy')} 
+            <p style={{fontWeight:"bold", fontSize:'1.1rem'}}>{format(educationData[0].startDate, 'MMM yyyy')} 
             -
-            {format(educationData.endDate, 'MMM yyyy')}</p>
-            </p>
+            {format(educationData[0].endDate, 'MMM yyyy')}</p>
           </div>
           <div className='details'>
             <p style={{fontWeight:"bold", fontSize:'1.2rem'}}>
-              {educationData.institution || "Insitution:"}
+              {educationData[0].institution || "Insitution:"}
             </p>
             <p>
-              {educationData.degree || "Degree:"}
+              {educationData[0].degree || "Degree:"}
             </p>
           </div>
         </div>
@@ -198,53 +199,61 @@ type EducationData = {
 }
 
 type EducationDataProbs = {
-  education: EducationData;
-  setEducation: React.Dispatch<React.SetStateAction<EducationData>>;
-}
+  educations: EducationData[];
+  setEducations: React.Dispatch<React.SetStateAction<EducationData[]>>;
+};
 
-function EducationSection({education, setEducation}: EducationDataProbs) :JSX.Element{
-  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
-    const{ name, value } = e.target;
 
-    // Special handling for date fields to convert value to Date type
-    if (name === "startDate" || name === "endDate") {
-      setEducation((prevData) => ({
-        ...prevData,
-        [name]: new Date(value),
-      }));
-    } else {
-      setEducation((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
-    }
+function EducationSection({educations, setEducations}: EducationDataProbs) :JSX.Element{
+  
+  const [tempEducation, setTempEducation] = useState({ institution: '', degree: '', startDate: new Date(), endDate: new Date()});
+  const [addBtnActivate, setAddBtnActivate] = useState(false);
+
+
+  const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const updatedTempEducations = [...educations];
+    updatedTempEducations[index] = {
+      ...updatedTempEducations[index],
+      [name]: name === 'startDate' || name === 'endDate' ? new Date(value) : value,
+    };
+    setEducations(updatedTempEducations);
+    setAddBtnActivate(true); // Activate the Save button when changes are made
   };
 
+  const handleTempEducationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTempEducation((prev) => ({
+      ...prev,
+      [name]: name === 'startDate' || name === 'endDate' ? new Date(value) : value,
+    }));
+  }
+
+  const editEducationForm = () => {
+    // Render the form for adding new education
     return(
-      <>
-      <h2>Now, put some information about your education!</h2>
       <form>
         <input
           type="text"
           name="institution"
           placeholder="Institution"
-          value={education.institution}
-          onChange={handleChange}
+          value={tempEducation.institution}
+          onChange={handleTempEducationChange}
         />
         <input
           type="text"
           name="degree"
           placeholder="Degree"
-          value={education.degree}
-          onChange={handleChange}
+          value={tempEducation.degree}
+          onChange={handleTempEducationChange}
         />
         <label>
           Start Date:
           <input
             type="date"
             name="startDate"
-            value={education.startDate.toISOString().split("T")[0]}
-            onChange={handleChange}
+            value={tempEducation.startDate.toISOString().split('T')[0]}
+            onChange={handleTempEducationChange}
           />
         </label>
         <label>
@@ -252,14 +261,180 @@ function EducationSection({education, setEducation}: EducationDataProbs) :JSX.El
           <input
             type="date"
             name="endDate"
-            value={education.endDate.toISOString().split("T")[0]}
-            onChange={handleChange}
+            value={tempEducation.endDate.toISOString().split('T')[0]}
+            onChange={handleTempEducationChange}
+          />
+        </label>
+        <button type="button" onClick={saveEducation}>
+          Save New Education
+        </button>
+      </form>
+    );
+  };
+
+  const saveEducation = () => {
+    setEducations([...educations, tempEducation]); // Add new education to the list
+    setAddBtnActivate(false); // Deactivate the Save button
+    setTempEducation({ institution: '', degree: '', startDate: new Date(), endDate: new Date() }); // Reset the temp education
+  };
+
+  const showEducations = () => {
+    return educations.map((edu, index) => (
+      <form key={index}>
+        <input
+          type="text"
+          name="institution"
+          placeholder="Institution"
+          value={edu.institution}
+          onChange={(e) => handleChange(index, e)}
+        />
+        <input
+          type="text"
+          name="degree"
+          placeholder="Degree"
+          value={edu.degree}
+          onChange={(e) => handleChange(index, e)}
+        />
+        <label>
+          Start Date:
+          <input
+            type="date"
+            name="startDate"
+            value={edu.startDate.toISOString().split('T')[0]}
+            onChange={(e) => handleChange(index, e)}
+          />
+        </label>
+        <label>
+          End Date:
+          <input
+            type="date"
+            name="endDate"
+            value={edu.endDate.toISOString().split('T')[0]}
+            onChange={(e) => handleChange(index, e)}
           />
         </label>
       </form>
-      </>
-    );
+    ));
+  };
+
+  function handleDelete(index: number) {
+    setEducations((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleEdit(index: number) {
+    const updatedEducations = [...educations];
+    const selectedEducation = updatedEducations[index];
+    setTempEducation(selectedEducation);
+    setAddBtnActivate(true);
+    handleDelete(index); 
+
+  }
+
+  function showEducationsCards(){
+    return educations.map((edu, index) => (
+      <div key={index} className="element-row">
+        <p>{edu.institution}</p>
+        <button onClick={() => handleEdit(index)}>Edit</button>
+        <button onClick={() => handleDelete(index)}>Delete</button>
+      </div>
+    ));
+  }
+
+  return (
+    <>
+      <h2>Now, put some information about your education!</h2>
+      {addBtnActivate ? (
+        editEducationForm() // Directly call the function to render the forms
+      ) : (
+        <>
+          {showEducationsCards()}
+          <button type="button" className="addBtn" onClick={() => setAddBtnActivate(true)}>
+            Add New Education
+          </button>
+        </>
+      )}
+    </>
+  );
 }
+
+/* 
+function EducationSection({ education, setEducation }: EducationsDataProbs): JSX.Element {
+  const [btnActivate, setBtnActivate] = useState(false);
+
+  const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEducation(prev =>
+      prev.map((edu, i) =>
+        i === index
+          ? {
+              ...edu,
+              [name]: name === "startDate" || name === "endDate" ? new Date(value) : value,
+            }
+          : edu
+      )
+    );
+  };
+
+  const addNewEducation = () => {
+    setEducation(prev => [
+      ...prev,
+      {
+        institution: "",
+        degree: "",
+        startDate: new Date(),
+        endDate: new Date(),
+      },
+    ]);
+  };
+
+  return (
+    <>
+      <h2>Now, put some information about your education!</h2>
+      {btnActivate ?
+      education.map((edu, index) => (
+        <form key={index}>
+          <input
+            type="text"
+            name="institution"
+            placeholder="Institution"
+            value={edu.institution}
+            onChange={(e) => handleChange(index, e)}
+          />
+          <input
+            type="text"
+            name="degree"
+            placeholder="Degree"
+            value={edu.degree}
+            onChange={(e) => handleChange(index, e)}
+          />
+          <label>
+            Start Date:
+            <input
+              type="date"
+              name="startDate"
+              value={edu.startDate.toISOString().split("T")[0]}
+              onChange={(e) => handleChange(index, e)}
+            />
+          </label>
+          <label>
+            End Date:
+            <input
+              type="date"
+              name="endDate"
+              value={edu.endDate.toISOString().split("T")[0]}
+              onChange={(e) => handleChange(index, e)}
+            />
+          </label>
+        </form>
+      )):
+      <button type="button" className='addBtn' onClick={() => setBtnActivate(true)}>
+        Add New Education
+      </button>
+      }
+    </>
+  );
+}
+*/
 
 
 //Work experience section
