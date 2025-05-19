@@ -1,4 +1,4 @@
-import { HtmlHTMLAttributes, useState, useEffect} from 'react';
+import { useState} from 'react';
 import React from 'react';
 import { JSX } from 'react';
 import {format} from 'date-fns'
@@ -34,13 +34,14 @@ function MainContent() {
     },
   ]);
 
-  const [workExperience, setWorkExperience] = useState<WorkExperienceData>({
-    position: '',
-    company: '',
+  const [workExperience, setWorkExperience] = useState<WorkExperienceData[]>([
+    {
+    position: 'Work Position',
+    company: 'ABC Company',
     startDate: new Date(),
     endDate: new Date(),
-    workDescription: '',
-  });
+  }
+  ]);
 
 
   const pageList = [
@@ -95,36 +96,76 @@ function MainContent() {
           </div>
         </div>
 
+        {educationData && educationData.length > 0 && (
         <div className="card-part" id="education">
-          <h2 className='title'>Education Preview</h2>
-          <div className="dates">
-            <p style={{fontWeight:"bold", fontSize:'1.1rem'}}>{format(educationData[0].startDate, 'MMM yyyy')} 
-            -
-            {format(educationData[0].endDate, 'MMM yyyy')}</p>
-          </div>
-          <div className='details'>
-            <p style={{fontWeight:"bold", fontSize:'1.2rem'}}>
-              {educationData[0].institution || "Insitution:"}
-            </p>
-            <p>
-              {educationData[0].degree || "Degree:"}
-            </p>
-          </div>
+          <h2 className="title">Education Preview</h2>
+          <div className='info'>
+            {educationData.map((edu, index) => (
+              <div className='row'>
+                <div className="dates">
+                  <p style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
+                    {educationData[index]?.startDate
+                      ? format(new Date(educationData[index].startDate), "MMM yyyy")
+                      : "Start Date"}{" "}
+                    -{" "}
+                    {educationData[index]?.endDate
+                      ? format(new Date(educationData[0].endDate), "MMM yyyy")
+                      : "End Date"}
+                  </p>
+                </div>
+                <div className="details">
+                  <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                    {educationData[index]?.institution
+                      ? educationData[index].institution
+                      : "Institution"}
+                  </p>
+                  <p>
+                    {educationData && educationData[index]?.degree
+                      ? educationData[index].degree
+                      : "Degree"}
+                  </p>
+                </div>
+              </div>
+            ))}
+            </div>
         </div>
+        )}
 
+        {workExperience && workExperience.length > 0 && (
         <div className="card-part" id="work-experience">
-          <h2 className='title'>Work Experience</h2>
-          <div className="dates">
-            <p style={{fontWeight:"bold", fontSize:'1.1rem'}}>{format(workExperience.startDate, 'MMM yyyy')} 
-            -
-            {format(workExperience.endDate, 'MMM yyyy')}</p>
-          </div>
-          <div className="details">
-            <p style={{fontWeight:"bold", fontSize:'1.2rem'}}>{workExperience.company ? `${workExperience.company}` : "Company:"}</p>
-            <p>{workExperience.position ? `${workExperience.position}` : "Position:"}</p>
-            {workExperience.workDescription && <p>{workExperience.workDescription}</p>}
-          </div>
+          <h2 className='title'>Work Experience Preview</h2>
+          <div className='info'>
+            {workExperience.map((work, index) => (
+              <div className='row'>
+                <div className="dates">
+                  <p style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
+                    {workExperience[index]?.startDate
+                      ? format(new Date(workExperience[index].startDate), "MMM yyyy")
+                      : "Start Date"}{" "}
+                    -{" "}
+                    {workExperience[index]?.endDate
+                      ? format(new Date(workExperience[0].endDate), "MMM yyyy")
+                      : "End Date"}
+                  </p>
+                </div>
+                <div className="details">
+                  <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                    {workExperience[index]?.company
+                      ? workExperience[index].company
+                      : "Company"}
+                  </p>
+                  <p>
+                    {workExperience && workExperience[index]?.position
+                      ? workExperience[index].position
+                      : "Position"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>  
         </div>
+        )}
+
       </div>
     </div>
   );
@@ -207,19 +248,9 @@ type EducationDataProbs = {
 function EducationSection({educations, setEducations}: EducationDataProbs) :JSX.Element{
   
   const [tempEducation, setTempEducation] = useState({ institution: '', degree: '', startDate: new Date(), endDate: new Date()});
-  const [addBtnActivate, setAddBtnActivate] = useState(false);
-
-
-  const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const updatedTempEducations = [...educations];
-    updatedTempEducations[index] = {
-      ...updatedTempEducations[index],
-      [name]: name === 'startDate' || name === 'endDate' ? new Date(value) : value,
-    };
-    setEducations(updatedTempEducations);
-    setAddBtnActivate(true); // Activate the Save button when changes are made
-  };
+  const [btnCreateActivate, setBtnCreateActivate] = useState(false);
+  const [btnEditActivate, setBtnEditActivate] = useState(false);
+  const [editIndex, setEditIndex] = useState(0);
 
   const handleTempEducationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -229,7 +260,7 @@ function EducationSection({educations, setEducations}: EducationDataProbs) :JSX.
     }));
   }
 
-  const editEducationForm = () => {
+  const createNewEducationForm = () => {
     // Render the form for adding new education
     return(
       <form>
@@ -265,43 +296,38 @@ function EducationSection({educations, setEducations}: EducationDataProbs) :JSX.
             onChange={handleTempEducationChange}
           />
         </label>
-        <button type="button" onClick={saveEducation}>
+        <button type="button" onClick={addNewEducation}>
           Save New Education
         </button>
       </form>
     );
   };
 
-  const saveEducation = () => {
-    setEducations([...educations, tempEducation]); // Add new education to the list
-    setAddBtnActivate(false); // Deactivate the Save button
-    setTempEducation({ institution: '', degree: '', startDate: new Date(), endDate: new Date() }); // Reset the temp education
-  };
-
-  const showEducations = () => {
-    return educations.map((edu, index) => (
-      <form key={index}>
+  const editEducationForm = () => {
+    // Render the form for editing existing education
+    return (
+      <form>
         <input
           type="text"
           name="institution"
           placeholder="Institution"
-          value={edu.institution}
-          onChange={(e) => handleChange(index, e)}
+          value={tempEducation.institution}
+          onChange={handleTempEducationChange}
         />
         <input
           type="text"
           name="degree"
           placeholder="Degree"
-          value={edu.degree}
-          onChange={(e) => handleChange(index, e)}
+          value={tempEducation.degree}
+          onChange={handleTempEducationChange}
         />
         <label>
           Start Date:
           <input
             type="date"
             name="startDate"
-            value={edu.startDate.toISOString().split('T')[0]}
-            onChange={(e) => handleChange(index, e)}
+            value={tempEducation.startDate.toISOString().split('T')[0]}
+            onChange={handleTempEducationChange}
           />
         </label>
         <label>
@@ -309,46 +335,84 @@ function EducationSection({educations, setEducations}: EducationDataProbs) :JSX.
           <input
             type="date"
             name="endDate"
-            value={edu.endDate.toISOString().split('T')[0]}
-            onChange={(e) => handleChange(index, e)}
+            value={tempEducation.endDate.toISOString().split('T')[0]}
+            onChange={handleTempEducationChange}
           />
         </label>
+        <button type="button" onClick={() => handleUpdateEducation(tempEducation)}>
+          Update Education
+        </button>
       </form>
-    ));
+    );
+  };
+
+  const addNewEducation = () => {
+    setEducations([...educations, tempEducation]); // Add new education to the list
+    setBtnCreateActivate(false); // Deactivate the Save button
+    setTempEducation({ institution: '', degree: '', startDate: new Date(), endDate: new Date() }); // Reset the temp education
   };
 
   function handleDelete(index: number) {
-    setEducations((prev) => prev.filter((_, i) => i !== index));
+    if(educations.length > 1) {
+      setEducations((prev) => prev.filter((_, i) => i !== index));
+    }
+    else if(educations.length === 1){
+      setEducations([]); 
+    }
+
+    else{
+      console.log("No education data to delete");
+    }
   }
 
   function handleEdit(index: number) {
-    const updatedEducations = [...educations];
-    const selectedEducation = updatedEducations[index];
-    setTempEducation(selectedEducation);
-    setAddBtnActivate(true);
-    handleDelete(index); 
+    const selectedEducation = educations[index];
+    setTempEducation(selectedEducation); // Set the selected education for editing
+    setBtnEditActivate(true); // Activate the edit form
+    setEditIndex(index); // Set the index of the education being edited
+  }
 
+  function handleUpdateEducation(updatedEducation: EducationData) {
+    setEducations((prev) =>
+      prev.map((edu, i) => (i === editIndex ? updatedEducation : edu))
+    );
+    setTempEducation({institution: '', degree: '', startDate: new Date(), endDate: new Date()}); // Clear the temporary education
+    setBtnEditActivate(false); // Deactivate the edit form
   }
 
   function showEducationsCards(){
-    return educations.map((edu, index) => (
-      <div key={index} className="element-row">
-        <p>{edu.institution}</p>
-        <button onClick={() => handleEdit(index)}>Edit</button>
-        <button onClick={() => handleDelete(index)}>Delete</button>
+    if(educations.length !== 0){
+      return(
+        <div className="cards-column">
+        {educations.map((edu, index) => (
+        <div key={index} className="element-row">
+            <p>{edu.institution}</p>
+            <div className="row-btns">
+              <button onClick={() => handleEdit(index)}>Edit</button>
+              <button onClick={() => handleDelete(index)}>Delete</button>
+            </div>
+          </div>
+      ))}
       </div>
-    ));
+      );
+    }
+    else{
+      return (
+        <p> You have no education data yet. </p>
+      );
+    }
   }
 
   return (
     <>
       <h2>Now, put some information about your education!</h2>
-      {addBtnActivate ? (
-        editEducationForm() // Directly call the function to render the forms
-      ) : (
+      {btnCreateActivate ? (
+        createNewEducationForm() // Directly call the function to render the forms
+      ) : btnEditActivate ? editEducationForm()
+      :(
         <>
           {showEducationsCards()}
-          <button type="button" className="addBtn" onClick={() => setAddBtnActivate(true)}>
+          <button type="button" className="addBtn" onClick={() => setBtnCreateActivate(true)}>
             Add New Education
           </button>
         </>
@@ -357,144 +421,98 @@ function EducationSection({educations, setEducations}: EducationDataProbs) :JSX.
   );
 }
 
-/* 
-function EducationSection({ education, setEducation }: EducationsDataProbs): JSX.Element {
-  const [btnActivate, setBtnActivate] = useState(false);
-
-  const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEducation(prev =>
-      prev.map((edu, i) =>
-        i === index
-          ? {
-              ...edu,
-              [name]: name === "startDate" || name === "endDate" ? new Date(value) : value,
-            }
-          : edu
-      )
-    );
-  };
-
-  const addNewEducation = () => {
-    setEducation(prev => [
-      ...prev,
-      {
-        institution: "",
-        degree: "",
-        startDate: new Date(),
-        endDate: new Date(),
-      },
-    ]);
-  };
-
-  return (
-    <>
-      <h2>Now, put some information about your education!</h2>
-      {btnActivate ?
-      education.map((edu, index) => (
-        <form key={index}>
-          <input
-            type="text"
-            name="institution"
-            placeholder="Institution"
-            value={edu.institution}
-            onChange={(e) => handleChange(index, e)}
-          />
-          <input
-            type="text"
-            name="degree"
-            placeholder="Degree"
-            value={edu.degree}
-            onChange={(e) => handleChange(index, e)}
-          />
-          <label>
-            Start Date:
-            <input
-              type="date"
-              name="startDate"
-              value={edu.startDate.toISOString().split("T")[0]}
-              onChange={(e) => handleChange(index, e)}
-            />
-          </label>
-          <label>
-            End Date:
-            <input
-              type="date"
-              name="endDate"
-              value={edu.endDate.toISOString().split("T")[0]}
-              onChange={(e) => handleChange(index, e)}
-            />
-          </label>
-        </form>
-      )):
-      <button type="button" className='addBtn' onClick={() => setBtnActivate(true)}>
-        Add New Education
-      </button>
-      }
-    </>
-  );
-}
-*/
-
-
 //Work experience section
 type WorkExperienceData = {
   company: string;
   position: string;
   startDate: Date;
   endDate: Date;
-  workDescription: string;
 };
 
 type WorkExperienceDataProbs = {
-  workExperience: WorkExperienceData;
-  setWorkExperience: React.Dispatch<React.SetStateAction<WorkExperienceData>>;
+  workExperience: WorkExperienceData[];
+  setWorkExperience: React.Dispatch<React.SetStateAction<WorkExperienceData[]>>;
 }
 
 
 function WorkExperienceSection({workExperience, setWorkExperience}: WorkExperienceDataProbs):JSX.Element{
-  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
-    const{ name, value } = e.target;
-    
-    // Special handling for date fields to convert value to Date type
-    if (name === "startDate" || name === "endDate") {
-      setWorkExperience((prevData) => ({
-        ...prevData,
-        [name]: new Date(value),
-      }));
-    } else {
-      setWorkExperience((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
-    }
+  
+  const [tempWork, setTempWork] = useState({ company: '', position: '', startDate: new Date(), endDate: new Date()});
+  const [btnCreateActivate, setBtnCreateActivate] = useState(false);
+  const [btnEditActivate, setBtnEditActivate] = useState(false);
+  const [editIndex, setEditIndex] = useState(0);
+  
+  
+  const handleTempWorkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTempWork((prev) => ({
+      ...prev,
+      [name]: name === 'startDate' || name === 'endDate' ? new Date(value) : value,
+    }));
   };
 
-  return(
-    <>
-      <h2>Now, put some information about your's work experience!</h2>
+  function handleUpdateWork (updatedWork: WorkExperienceData) {
+    setWorkExperience((prev) =>
+      prev.map((work, i) => (i === editIndex ? updatedWork : work))
+    );
+    setTempWork({company: '', position: '', startDate: new Date(), endDate: new Date()}); // Clear the temporary education
+    setBtnEditActivate(false); // Deactivate the edit form
+  }
+
+  function handleEdit(index: number) {
+    const selectedWork = workExperience[index];
+    setTempWork(selectedWork); // Set the selected education for editing
+    setBtnEditActivate(true); // Activate the edit form
+    setEditIndex(index); // Set the index of the education being edited
+  }
+
+  const addNewWork = () => {
+    setWorkExperience([...workExperience, tempWork]); // Add new work to the list
+    setBtnCreateActivate(false); // Deactivate the Save button
+    setTempWork({ company: '', position: '', startDate: new Date(), endDate: new Date()}); // Reset the temp education
+  }
+
+  function handleDelete(index: number) {
+    if(workExperience.length > 1) {
+      setWorkExperience((prev) => prev.filter((_, i) => i !== index));
+    }
+    else if(workExperience.length === 1){
+      setWorkExperience([]); 
+    }
+
+    else{
+      console.log("No work experience data to delete");
+    }
+  }
+
+
+  
+
+  const createNewWorkForm = ():JSX.Element => { 
+    // Render the form for adding new work experience
+    return(
       <form>
         <input
           type="text"
           name="company"
           placeholder="Company"
-          value={workExperience.company}
-          onChange={handleChange}
+          value={tempWork.company}
+          onChange={handleTempWorkChange}
         />
         <input
           type="text"
           name="position"
           placeholder="Position"
-          value={workExperience.position}
-          onChange={handleChange}
+          value={tempWork.position}
+          onChange={handleTempWorkChange}
         />
         <label>
           Start Date:
           <input
             type="date"
             name="startDate"
-            value={workExperience.startDate.toISOString().split("T")[0]}
-            onChange={handleChange}
+            value={tempWork.startDate.toISOString().split('T')[0]}
+            onChange={handleTempWorkChange}
           />
         </label>
         <label>
@@ -502,19 +520,100 @@ function WorkExperienceSection({workExperience, setWorkExperience}: WorkExperien
           <input
             type="date"
             name="endDate"
-            value={workExperience.endDate.toISOString().split("T")[0]}
-            onChange={handleChange}
+            value={tempWork.endDate.toISOString().split('T')[0]}
+            onChange={handleTempWorkChange}
           />
         </label>
-        <textarea
-          name="workDescription"
-          placeholder="Work Description"
-          value={workExperience.workDescription}
-          onChange={handleChange}
-        />
+        <button type="button" onClick={addNewWork}>
+          Save New Work Experience
+        </button>
       </form>
-    </>
-  )
+    );
+  }
+
+    const editWorkExperienceForm = () => { // Render the form for editing existing work experience
+      return (
+        <form>
+          <input
+            type="text"
+            name="company"
+            placeholder="Company"
+            value={tempWork.company}
+            onChange={handleTempWorkChange}
+          />
+          <input
+            type="text"
+            name="position"
+            placeholder="Position"
+            value={tempWork.position}
+            onChange={handleTempWorkChange}
+          />
+          <label>
+            Start Date:
+            <input
+              type="date"
+              name="startDate"
+              value={tempWork.startDate.toISOString().split('T')[0]}
+              onChange={handleTempWorkChange}
+            />
+          </label>
+          <label>
+            End Date:
+            <input
+              type="date"
+              name="endDate"
+              value={tempWork.endDate.toISOString().split('T')[0]}
+              onChange={handleTempWorkChange}
+            />
+          </label>
+          <button type="button" onClick={() => handleUpdateWork(tempWork)}>
+            Update Work Experience
+          </button>
+        </form>
+      );
+
+    }
+
+    function showWorkCards(){
+      if(workExperience.length !== 0){
+        return(
+        <div className="cards-column">
+        {workExperience.map((work, index) => (
+          <div key={index} className="element-row">
+            <p>{work.company}</p>
+            <div className="row-btns">
+              <button onClick={() => handleEdit(index)}>Edit</button>
+              <button onClick={() => handleDelete(index)}>Delete</button>
+            </div>
+          </div>
+        ))}
+        </div>
+        );
+      }
+      else{
+        return (
+          <p> You have no work experience data yet. </p>
+        );
+      }
+    }
+  
+  
+    return (
+      <>
+        <h2>Now, put some information about your's work experience!</h2>
+        {btnCreateActivate ? (
+          createNewWorkForm() // Directly call the function to render the forms
+        ) : btnEditActivate ? editWorkExperienceForm()
+        :(
+          <>
+            {showWorkCards()}
+            <button type="button" className="addBtn" onClick={() => setBtnCreateActivate(true)}>
+              Add New Work Experience
+            </button>
+          </>
+        )}
+      </>
+    );
 }
 
 
